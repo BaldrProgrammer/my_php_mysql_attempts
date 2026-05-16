@@ -9,3 +9,17 @@ if ($mysqli->connect_error) {
     die("Błąd połączenia z bazą danych: " . $mysqli->connect_error);
 }
 $mysqli->set_charset("utf8mb4");
+
+// Metoda POST
+$customerName = $_POST['customerName'];
+
+// Metoda GET
+$searchTerm = $_GET['search'];
+
+// Bezpieczne pobieranie
+$city = filter_input(INPUT_POST, 'city', FILTER_SANITIZE_STRING);
+
+
+echo $customerName;
+echo $searchTerm;
+echo $city;
