@@ -1,6 +1,6 @@
 <div class="example-form">
     <h3>Wyswietlenie zamowienia za jego numerem</h3>
-    <form method="GET" action="#">
+    <form method="GET">
         <div class="form-row">
             <div class="form-group">
                 <label for="orderNumber">Prosze podac Numer Zamowienia:</label>
@@ -28,13 +28,28 @@ $mysqli->set_charset("utf8mb4");
 
 
 $orderNumber = $_GET['orderNumber'];
-echo $orderNumber;
 
 $sql = 'SELECT * FROM orders WHERE orderNumber = ?';
 $stmt = $mysqli->prepare($sql);
 
 $stmt->bind_param('i', $orderNumber);
 $stmt->execute();
+$result = $stmt->get_result();
 
-
+if ($result->num_rows > 0) {
+    echo "<h3>Produkty z linii: " . htmlspecialchars($orderNumber) . "</h3>";
+    echo "<table>";
+    echo "<tr><th>order date</th><th>required date</th><th>shipped date</th><th>status</th>><th>comments</th></tr>";
+    while ($order = $result->fetch_assoc()) {
+        echo "<tr>";
+        echo "<td>" . htmlspecialchars($order['orderNumber']) . "</td>";
+        echo "<td>" . htmlspecialchars($order['orderDate']) . "</td>";
+        echo "<td>" . htmlspecialchars($order['requiredDate']) . "</td>";
+        echo "<td>" . htmlspecialchars($order['shippedDate']) . "</td>";
+        echo "<td>" . htmlspecialchars($order['status']) . "</td>";
+        echo "<td>" . htmlspecialchars($order['comments']) . "</td>";
+        echo "</tr>";
+    }
+    echo "</table>";
+}
 ?>
