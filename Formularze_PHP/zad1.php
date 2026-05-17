@@ -81,4 +81,7 @@ if ($stmt->execute()) {
 } else {
     echo "blas podczas dodawania klientu: " . $stmt->error;
 }
+
+$stmt->close();
+$mysqli->close()
 ?>
