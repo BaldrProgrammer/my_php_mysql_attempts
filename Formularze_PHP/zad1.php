@@ -1,5 +1,5 @@
 <div class="example-form">
-    <h3>Przykładowy formularz dodawania klienta</h3>
+    <h3>Dodawanie klienta</h3>
     <form method="POST" action="#">
         <div class="form-row">
             <div class="form-group"> <!-- no kurde nie jest on autoincrement -->
