@@ -1,38 +1,11 @@
-<?php
-$host = '127.0.0.1';
-$db_user = 'admin';
-$db_password = 'admin';
-$db_name = 'classicmodels'; // Nazwa bazy danych
-
-$mysqli = new mysqli($host, $db_user, $db_password, $db_name, 3306);
-if ($mysqli->connect_error){
-    die("bled podlaczenia" . $mysqli->connect_error);
-}
-$mysqli->set_charset("utf8mb4");
-
-$customerName = $_POST['customerName'];
-$contactFirstName = $_POST['contactFirstName'];
-$contactLastName = $_POST['contactLastName'];
-$phone = $_POST['phone'];
-$addressLine1 = $_POST['addressLine1'];
-$city = $_POST['city'];
-$country = $_POST['country'];
-
-$sql = 'INSERT INTO customers (curtomerName, contactLastName, contactFirstName, phone, addressLine1, city, country) VALUES (? ? ? ? ? ? ?);';
-$stmt = $mysqli->prepare($sql);
-$stmt->bind_param('sssssss', $customerName, $contactLastName, $contactFirstName, $phone, $addressLine1, $city, $country);
-
-if ($stmt->execute()) {
-    echo "Pomyślnie dodano nowy produkt o kodzie: " . htmlspecialchars($mysqli->insert_id);
-} else {
-    echo "Błąd podczas dodawania produktu: " . $stmt->error;
-}
-?>
-
 <div class="example-form">
     <h3>Przykładowy formularz dodawania klienta</h3>
     <form method="POST" action="#">
         <div class="form-row">
+            <div class="form-group"> <!-- no kurde nie jest on autoincrement -->
+                <label for="customerNumber">Numer klienta:</label>
+                <input type="text" id="customerNumber" name="customerNumber" required="">
+            </div>
             <div class="form-group">
                 <label for="customerName">Imie:</label>
                 <input type="text" id="customerName" name="customerName" required="">
@@ -61,12 +34,12 @@ if ($stmt->execute()) {
                 <label for="country">Kraj:</label>
                 <select id="country" name="country" required="">
                     <option value="">Wybierz kraj</option>
-                    <option value="USA">Ukraina</option>
+                    <option value="Ukraine">Ukraina</option>
                     <option value="Poland">Polska</option>
                     <option value="Germany">Niemcy</option>
-                    <option value="Germany">Czechy</option>
-                    <option value="Germany">Slowacja</option>
-                    <option value="Germany">Litwa</option>
+                    <option value="Czech">Czechy</option>
+                    <option value="Slovakia">Slowacja</option>
+                    <option value="Lithuania">Litwa</option>
                 </select>
             </div>
         </div>
@@ -76,3 +49,36 @@ if ($stmt->execute()) {
         </button>
     </form>
 </div>
+
+
+<?php
+$host = '127.0.0.1';
+$db_user = 'admin';
+$db_password = 'admin';
+$db_name = 'classicmodels';
+
+$mysqli = new mysqli($host, $db_user, $db_password, $db_name, 3306);
+if ($mysqli->connect_error){
+    die("blad podlaczenia" . $mysqli->connect_error);
+}
+$mysqli->set_charset("utf8mb4");
+
+$customerNumber = $_POST['customerNumber'];
+$customerName = $_POST['customerName'];
+$contactFirstName = $_POST['contactFirstName'];
+$contactLastName = $_POST['contactLastName'];
+$phone = $_POST['phone'];
+$addressLine1 = $_POST['addressLine1'];
+$city = $_POST['city'];
+$country = $_POST['country'];
+
+$sql = 'INSERT INTO customers (customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, city, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?);';
+$stmt = $mysqli->prepare($sql);
+$stmt->bind_param('isssssss', $customerNumber, $customerName, $contactLastName, $contactFirstName, $phone, $addressLine1, $city, $country);
+
+if ($stmt->execute()) {
+    echo "Pomyslnie dodano nowy klient o kodzie: " . htmlspecialchars($mysqli->insert_id);
+} else {
+    echo "blas podczas dodawania klientu: " . $stmt->error;
+}
+?>
