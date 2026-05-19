@@ -43,16 +43,43 @@ if ($mysqli->connect_error){
 $mysqli->set_charset("utf8mb4");
 
 
-$orderNumber = $_GET['orderNumber'];
-$customerNumber = $_GET['customerNumber'];
-$status = $_GET['status'];
-$limit = $_GET['limit'];
-$offset = $_GET['offset'];
+$orderNumber = isset($_GET['orderNumber']) && $_GET['orderNumber'] !== ''
+        ? (int)$_GET['orderNumber']
+        : null;
 
-$sql = 'SELECT * FROM orders WHERE orderNumber = ? and customerNumber = ? and status = ? limit ? offset ?';
+$customerNumber = isset($_GET['customerNumber']) && $_GET['customerNumber'] !== ''
+        ? (int)$_GET['customerNumber']
+        : null;
+
+$status = $_GET['status'] ?? null;
+
+$limit = isset($_GET['limit']) && $_GET['limit'] !== ''
+        ? (int)$_GET['limit']
+        : 10;
+
+$offset = isset($_GET['offset']) && $_GET['offset'] !== ''
+        ? (int)$_GET['offset']
+        : 0;
+
+$sql = '
+    SELECT * 
+    FROM orders
+    WHERE (? IS NULL OR orderNumber = ?)
+      OR customerNumber = ?
+      OR (? IS NULL OR status = ?)
+    LIMIT ? OFFSET ?
+';
 $stmt = $mysqli->prepare($sql);
 
-$stmt->bind_param('iisii', $orderNumber, $customerNumber, $status, $limit, $offset);
+$stmt->bind_param('iiissii',
+        $orderNumber,
+        $orderNumber,
+        $customerNumber,
+        $status,
+        $status,
+        $limit,
+        $offset
+);
 $stmt->execute();
 $result = $stmt->get_result();
 

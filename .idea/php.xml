@@ -37,6 +37,7 @@
       <path value="/usr/bin" />
     </include_path>
   </component>
+  <component name="PhpProjectSharedConfiguration" php_language_level="8.5" />
   <component name="PhpStan">
     <PhpStan_settings>
       <phpstan_by_interpreter asDefaultInterpreter="true" interpreter_id="921d0043-9742-40f5-85a4-070b2ce80d76" timeout="60000" />
