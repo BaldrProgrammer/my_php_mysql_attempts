@@ -7,3 +7,14 @@ create table reviews(
     reviewText text,
     reviewDate date
 );
+
+-- 2
+insert into customers(customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, city, country)
+values (465464564,
+        'Sklep Modele',
+        'Anna',
+        'Nowak',
+        '500-100-200',
+        '',
+        'Warszawa',
+        'Polska');
