@@ -4,7 +4,23 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="orderNumber">Prosze podac Numer Zamowienia:</label>
-                <input type="text" id="orderNumber" name="orderNumber" required="">
+                <input type="text" id="orderNumber" name="orderNumber">
+            </div>
+            <div class="form-group">
+                <label for="customerNumber">Prosze podac Numer klienta:</label>
+                <input type="text" id="customerNumber" name="customerNumber">
+            </div>
+            <div class="form-group">
+                <label for="status">Prosze podac Status Zamowienia:</label>
+                <input type="text" id="status" name="status">
+            </div>
+            <div class="form-group">
+                <label for="limit">Prosze podac maxymalna ilosc zamowien:</label>
+                <input type="text" id="limit" name="limit">
+            </div>
+            <div class="form-group">
+                <label for="offset">Prosze podac przesunięcie:</label>
+                <input type="text" id="offset" name="offset">
             </div>
         </div>
         <button type="submit" style="background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
@@ -28,11 +44,15 @@ $mysqli->set_charset("utf8mb4");
 
 
 $orderNumber = $_GET['orderNumber'];
+$customerNumber = $_GET['customerNumber'];
+$status = $_GET['status'];
+$limit = $_GET['limit'];
+$offset = $_GET['offset'];
 
-$sql = 'SELECT * FROM orders WHERE orderNumber = ?';
+$sql = 'SELECT * FROM orders WHERE orderNumber = ? and customerNumber = ? and status = ? limit ? offset ?';
 $stmt = $mysqli->prepare($sql);
 
-$stmt->bind_param('i', $orderNumber);
+$stmt->bind_param('iisii', $orderNumber, $customerNumber, $status, $limit, $offset);
 $stmt->execute();
 $result = $stmt->get_result();
 
