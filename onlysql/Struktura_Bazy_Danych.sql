@@ -18,3 +18,10 @@ values (465464564,
         '',
         'Warszawa',
         'Polska');
+
+-- 3
+alter table reviews
+add constraint fk_customerNumbers
+foreign key (customerNumber) references customers(customerNumber);
+
+-- 4
