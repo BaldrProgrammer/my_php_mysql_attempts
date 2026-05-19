@@ -1,161 +1,102 @@
 <div class="example-form">
     <h3>Edycja produktu</h3>
-
-    <form method="POST">
-
+    <form method="POST" action="#">
         <div class="form-row">
-
             <div class="form-group">
-                <label for="productCode">Kod produktu:</label>
-                <input type="text" id="productCode" name="productCode">
+                <label for="productCode">Numer produktu:</label>
+                <input type="text" id="productCode" name="productCode" required="">
             </div>
-
             <div class="form-group">
-                <label for="price">Nowa cena:</label>
-                <input type="text" id="price" name="price">
+                <label for="msrp">Nowa cena:</label>
+                <input type="text" id="msrp" name="msrp" required="">
             </div>
-
+            <div class="form-group">
+                <label for="productLine">Linia produktu:</label>
+                <input type="text" id="productLine" name="productLine" required="">
+            </div>
         </div>
-
-        <button type="submit"
-                style="background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
-            Zmien
+        <button type="submit" style="background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+            Zapisz zmiany
         </button>
-
     </form>
 </div>
 
 <?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $mysqli = new mysqli('127.0.0.1', 'admin', 'admin', 'classicmodels', 3306);
+    if ($mysqli->connect_error) {
+        die("Blad podlaczenia: " . $mysqli->connect_error);
+    }
+    $mysqli->set_charset("utf8mb4");
 
-$host = '127.0.0.1';
-$db_user = 'admin';
-$db_password = 'admin';
-$db_name = 'classicmodels';
+    $productCode = $_POST['productCode'];
+    $msrp = $_POST['msrp'];
+    $productLine = $_POST['productLine'];
 
-$mysqli = new mysqli($host, $db_user, $db_password, $db_name, 3306);
+    $maxRetries = 3;
+    $isUpdated = false;
 
-if ($mysqli->connect_error){
-    die("blad podlaczenia " . $mysqli->connect_error);
-}
-
-$mysqli->set_charset("utf8mb4");
-
-$productCode = $_POST['productCode'] ?? null;
-$newPrice = $_POST['price'] ?? null;
-
-if ($productCode && $newPrice){
-
-    $tries = 0;
-
-    while ($tries < 3){
+    while ($maxRetries > 0 && !$isUpdated) {
+        $mysqli->begin_transaction();
 
         try {
-
-            $mysqli->begin_transaction();
-
-            /*
-             * blokowanie produktu
-             */
-            $sql = "
-                SELECT *
-                FROM products
-                WHERE productCode = ?
-                FOR UPDATE
-            ";
-
-            $stmt = $mysqli->prepare($sql);
+            $stmt = $mysqli->prepare("SELECT MSRP, productDescription FROM products WHERE productCode = ? FOR UPDATE");
             $stmt->bind_param("s", $productCode);
             $stmt->execute();
+            $product = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
 
-            $result = $stmt->get_result();
-
-            if ($result->num_rows == 0){
+            if (!$product) {
                 throw new Exception("Produkt nie istnieje");
             }
 
-            $product = $result->fetch_assoc();
+            $oldPrice = $product['MSRP'];
+            $newDescription = $product['productDescription'] . " [Log: zmiana ceny z {$oldPrice} na {$msrp}]";
 
-            /*
-             * sprawdzenie ilosci
-             */
-            if ($product['quantityInStock'] <= 0){
-                throw new Exception("Brak produktu");
-            }
+            $escapedProductCode = $mysqli->real_escape_string($productCode);
+            $escapedProductLine = $mysqli->real_escape_string($productLine);
+            $escapedDescription = $mysqli->real_escape_string($newDescription);
 
-            /*
-             * update ceny
-             */
             $sql = "
-                UPDATE products
-                SET buyPrice = ?
-                WHERE productCode = ?
+                UPDATE products 
+                SET MSRP = {$msrp}, productDescription = '{$escapedDescription}' 
+                WHERE productCode = '{$escapedProductCode}';
+                
+                UPDATE productlines 
+                SET textDescription = CONCAT('Suma MSRP dla tej kategorii: ', (SELECT SUM(MSRP) FROM products WHERE productLine = '{$escapedProductLine}')) 
+                WHERE productLine = '{$escapedProductLine}';
             ";
 
-            $stmt = $mysqli->prepare($sql);
-            $stmt->bind_param("ds", $newPrice, $productCode);
-            $stmt->execute();
-
-            /*
-             * historia + statystyki
-             */
-            $multi = "
-                INSERT INTO product_history(productCode, oldPrice, newPrice)
-                VALUES(
-                    '$productCode',
-                    '{$product['buyPrice']}',
-                    '$newPrice'
-                );
-
-                UPDATE product_stats
-                SET updatedProducts = updatedProducts + 1
-                WHERE productLine = '{$product['productLine']}'
-            ";
-
-            $mysqli->multi_query($multi);
-
-            while ($mysqli->next_result()){
-                ;
+            if (!$mysqli->multi_query($sql)) {
+                $errors = current($mysqli->error_list);
+                throw new Exception($errors['error'] ?? $mysqli->error, $mysqli->errno);
             }
+
+            do {
+                if ($result = $mysqli->store_result()) {
+                    $result->free();
+                }
+            } while ($mysqli->more_results() && $mysqli->next_result());
 
             $mysqli->commit();
+            $isUpdated = true;
+            echo "Pomyslnie zaktualizowano produkt i statystyki linii";
 
-            echo "<p>Produkt zostal zmieniony</p>";
-
-            break;
-
-        } catch (mysqli_sql_exception $e){
-
+        } catch (Exception $e) {
             $mysqli->rollback();
 
-            /*
-             * deadlock retry
-             */
-            if ($e->getCode() == 1213){
-
-                $tries++;
-
-                sleep(1);
-
-                continue;
+            if ($e->getCode() == 1213) {
+                $maxRetries--;
+                usleep(50000);
+                if ($maxRetries == 0) {
+                    echo "Blad blokady bazy danych: " . $e->getMessage();
+                }
+            } else {
+                echo "Blad podczas edycji: " . $e->getMessage();
+                break;
             }
-
-            echo "<p>MYSQL ERROR: " . $mysqli->error . "</p>";
-
-            echo "<pre>";
-            print_r($mysqli->error_list);
-            echo "</pre>";
-
-            break;
-
-        } catch (Exception $e){
-
-            $mysqli->rollback();
-
-            echo "<p>" . $e->getMessage() . "</p>";
-
-            break;
         }
     }
+    $mysqli->close();
 }
-
 ?>
