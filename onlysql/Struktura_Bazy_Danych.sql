@@ -27,3 +27,7 @@ foreign key (customerNumber) references customers(customerNumber);
 -- 4
 alter table customers
 add column lastLogin datetime;
+
+-- 5
+select phone from customers where customerNumber = 103;
+
