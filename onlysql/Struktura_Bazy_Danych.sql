@@ -25,3 +25,5 @@ add constraint fk_customerNumbers
 foreign key (customerNumber) references customers(customerNumber);
 
 -- 4
+alter table customers
+add column lastLogin datetime;
