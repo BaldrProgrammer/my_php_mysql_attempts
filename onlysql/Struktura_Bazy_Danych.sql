@@ -29,7 +29,9 @@ alter table customers
 add column lastLogin datetime;
 
 -- 5
-select phone from customers where customerNumber = 103;
+update customers
+set phone = '333-444-555'
+where customerNumber = 103;
 
 -- 6
 delete from customers
