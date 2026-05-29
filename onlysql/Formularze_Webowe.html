@@ -5,9 +5,9 @@
     <title>FW</title>
 </head>
 <body>
-  <form action="Formularze_Webowe_PHP.php">
-    <label for="customerName">Wybierz Klienta</label>
-    <select id="customerName" name="customerName">
+  <form action="Formularze_Webowe_PHP.php" method="post">
+    <label for="customerNumber">Wybierz Klienta</label>
+    <select id="customerNumber" name="customerNumber">
       <option value="Atelier graphique">Atelier graphique</option>
       <option value="Signal Gift Stores">Signal Gift Stores</option>
       <option value="Australian Collectors, Co.">Australian Collectors, Co.</option>
@@ -23,6 +23,8 @@
       <option value="Shipped">Shipped</option>
       <option value="Cancelled">Cancelled</option>
     </select>
+
+    <button type="submit">Submit</button>
   </form>
 </body>
 </html>
